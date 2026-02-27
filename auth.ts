@@ -8,6 +8,7 @@ export const {
     signOut,
     auth,
 } = NextAuth({
+    trustHost: true,
     providers: [
         ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
             ? [

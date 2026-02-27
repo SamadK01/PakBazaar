@@ -4,6 +4,8 @@ import path from "path";
 import { auth } from "@/auth";
 import type { Product } from "@/lib/data";
 
+export const runtime = "nodejs";
+
 const filePath = path.join(process.cwd(), "data", "products.json");
 
 async function readProducts(): Promise<Product[]> {
@@ -64,4 +66,3 @@ export async function DELETE(req: NextRequest) {
   await writeProducts(filtered);
   return NextResponse.json({ ok: true });
 }
-

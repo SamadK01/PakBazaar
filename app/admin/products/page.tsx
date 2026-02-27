@@ -160,8 +160,11 @@ export default function AdminProductsPage() {
             </div>
 
             {!dbStatus?.canConnect && (
-                <div className="p-3 border rounded-md bg-amber-50 text-amber-900">
-                    Database not configured. Changes won’t persist until you add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel and create the table.
+                <div className="p-3 border rounded-md bg-amber-50 text-amber-900 flex items-center justify-between">
+                    <span>Database not configured. Changes won’t persist until you add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY and create the table.</span>
+                    <a href="/admin/db-setup">
+                        <Button variant="outline" size="sm">Open Setup</Button>
+                    </a>
                 </div>
             )}
             <div className="border rounded-lg">
@@ -204,41 +207,43 @@ export default function AdminProductsPage() {
                         <DialogTitle>{isEditing ? 'Edit Product' : 'Add New Product'}</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="name" className="text-right">Name</Label>
-                            <Input id="name" value={currentProduct.name || ''} onChange={(e) => setCurrentProduct({ ...currentProduct, name: e.target.value, slug: (e.target.value || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') })} className="col-span-3" />
+                        <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+                            <Label htmlFor="name" className="md:text-right">Name</Label>
+                            <Input id="name" placeholder="e.g., ProBass Headphones" value={currentProduct.name || ''} onChange={(e) => setCurrentProduct({ ...currentProduct, name: e.target.value, slug: (e.target.value || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') })} className="md:col-span-3" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="slug" className="text-right">Slug</Label>
-                            <Input id="slug" value={currentProduct.slug || ''} onChange={(e) => setCurrentProduct({ ...currentProduct, slug: e.target.value })} className="col-span-3" />
+                        <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+                            <Label htmlFor="slug" className="md:text-right">Slug</Label>
+                            <Input id="slug" placeholder="auto-generated from name" value={currentProduct.slug || ''} onChange={(e) => setCurrentProduct({ ...currentProduct, slug: e.target.value })} className="md:col-span-3" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="price" className="text-right">Price</Label>
-                            <Input id="price" type="number" value={currentProduct.price || 0} onChange={(e) => setCurrentProduct({ ...currentProduct, price: Number(e.target.value) })} className="col-span-3" />
+                        <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+                            <Label htmlFor="category" className="md:text-right">Category</Label>
+                            <Input id="category" placeholder="e.g., Electronics" value={currentProduct.category || ''} onChange={(e) => setCurrentProduct({ ...currentProduct, category: e.target.value })} className="md:col-span-3" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="category" className="text-right">Category</Label>
-                            <Input id="category" value={currentProduct.category || ''} onChange={(e) => setCurrentProduct({ ...currentProduct, category: e.target.value })} className="col-span-3" />
+                        <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+                            <Label htmlFor="price" className="md:text-right">Price</Label>
+                            <Input id="price" type="number" min="0" step="1" placeholder="e.g., 8500" value={currentProduct.price ?? 0} onChange={(e) => setCurrentProduct({ ...currentProduct, price: Number(e.target.value) })} className="md:col-span-3" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="image" className="text-right">Image URL</Label>
-                            <Input id="image" value={currentProduct.image || ''} onChange={(e) => setCurrentProduct({ ...currentProduct, image: e.target.value })} className="col-span-3" />
+                        <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+                            <Label htmlFor="originalPrice" className="md:text-right">Original Price</Label>
+                            <Input id="originalPrice" type="number" min="0" step="1" placeholder="optional" value={currentProduct.originalPrice ?? 0} onChange={(e) => setCurrentProduct({ ...currentProduct, originalPrice: Number(e.target.value) || undefined })} className="md:col-span-3" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="description" className="text-right">Description</Label>
-                            <Input id="description" value={currentProduct.description || ''} onChange={(e) => setCurrentProduct({ ...currentProduct, description: e.target.value })} className="col-span-3" />
+                        <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+                            <Label htmlFor="stock" className="md:text-right">Stock</Label>
+                            <Input id="stock" type="number" min="0" step="1" placeholder="e.g., 25" value={currentProduct.stock ?? 0} onChange={(e) => setCurrentProduct({ ...currentProduct, stock: Number(e.target.value) })} className="md:col-span-3" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="stock" className="text-right">Stock</Label>
-                            <Input id="stock" type="number" value={currentProduct.stock || 0} onChange={(e) => setCurrentProduct({ ...currentProduct, stock: Number(e.target.value) })} className="col-span-3" />
+                        <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+                            <Label htmlFor="image" className="md:text-right">Image URL</Label>
+                            <Input id="image" placeholder="https://..." value={currentProduct.image || ''} onChange={(e) => setCurrentProduct({ ...currentProduct, image: e.target.value })} className="md:col-span-3" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="originalPrice" className="text-right">Original Price</Label>
-                            <Input id="originalPrice" type="number" value={currentProduct.originalPrice || 0} onChange={(e) => setCurrentProduct({ ...currentProduct, originalPrice: Number(e.target.value) || undefined })} className="col-span-3" />
+                        <div className="grid grid-cols-1 md:grid-cols-4 items-start gap-2 md:gap-4">
+                            <Label htmlFor="description" className="md:text-right pt-2">Description</Label>
+                            <textarea id="description" placeholder="Short product description" value={currentProduct.description || ''} onChange={(e) => setCurrentProduct({ ...currentProduct, description: e.target.value })} className="md:col-span-3 border rounded-md p-2 h-24" />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="featured" className="text-right">Featured</Label>
-                            <input id="featured" type="checkbox" checked={!!currentProduct.featured} onChange={(e) => setCurrentProduct({ ...currentProduct, featured: e.target.checked })} className="col-span-3 h-4 w-4" />
+                        <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+                            <Label htmlFor="featured" className="md:text-right">Featured</Label>
+                            <div className="md:col-span-3">
+                                <input id="featured" type="checkbox" checked={!!currentProduct.featured} onChange={(e) => setCurrentProduct({ ...currentProduct, featured: e.target.checked })} className="h-4 w-4" />
+                            </div>
                         </div>
                     </div>
                     <DialogFooter>

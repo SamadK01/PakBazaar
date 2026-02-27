@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
-import { auth } from "@/auth";
 import type { Product } from "@/lib/data";
 
 export const runtime = "nodejs";
@@ -28,6 +27,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const { auth } = await import("@/auth");
   const session = await auth();
   if (!session || (session.user as any)?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  const { auth } = await import("@/auth");
   const session = await auth();
   if (!session || (session.user as any)?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -56,6 +57,7 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const { auth } = await import("@/auth");
   const session = await auth();
   if (!session || (session.user as any)?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

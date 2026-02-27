@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 
 export default function AdminProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
+    const [dbStatus, setDbStatus] = useState<{ configured: boolean; canConnect: boolean; error?: string } | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [currentProduct, setCurrentProduct] = useState<Partial<Product>>({});
@@ -36,7 +37,19 @@ export default function AdminProductsPage() {
             const data = await res.json();
             setProducts(data);
         };
-        load();
+        const checkDb = async () => {
+            try {
+                const r = await fetch('/api/db/status', { cache: 'no-store' });
+                if (r.ok) {
+                    const j = await r.json();
+                    setDbStatus(j);
+                    if (!j.canConnect) {
+                        console.warn('DB not connected:', j.error);
+                    }
+                }
+            } catch {}
+        };
+        load().then(checkDb);
     }, []);
 
     const canSave = useMemo(() => {
@@ -101,6 +114,12 @@ export default function AdminProductsPage() {
                     toast.success('Product updated');
                 } else {
                     // Local-only fallback
+                    try {
+                        const err = await r.json();
+                        toast.error(err?.error || 'Update failed');
+                    } catch {
+                        toast.error('Update failed');
+                    }
                     setProducts(products.map((p) => (p.id === currentProduct.id ? (currentProduct as Product) : p)));
                     toast.message('Updated locally (not persisted)');
                 }
@@ -117,6 +136,12 @@ export default function AdminProductsPage() {
                     toast.success('Product added');
                 } else {
                     // Local-only fallback
+                    try {
+                        const err = await r.json();
+                        toast.error(err?.error || 'Add failed');
+                    } catch {
+                        toast.error('Add failed');
+                    }
                     setProducts([...products, currentProduct as Product]);
                     toast.message('Added locally (not persisted)');
                 }
@@ -134,6 +159,11 @@ export default function AdminProductsPage() {
                 </Button>
             </div>
 
+            {!dbStatus?.canConnect && (
+                <div className="p-3 border rounded-md bg-amber-50 text-amber-900">
+                    Database not configured. Changes won’t persist until you add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel and create the table.
+                </div>
+            )}
             <div className="border rounded-lg">
                 <Table>
                     <TableHeader>

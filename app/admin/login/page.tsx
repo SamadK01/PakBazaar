@@ -30,6 +30,20 @@ function LoginForm() {
         setIsLoading(true);
 
         try {
+            const statusRes = await fetch('/api/auth/status', { cache: 'no-store' });
+            const { configured } = statusRes.ok ? await statusRes.json() : { configured: false };
+
+            if (!configured) {
+                if (formData.username === 'admin' && formData.password === 'admin') {
+                    toast.success('Login bypass (dev mode)');
+                    router.push(callbackUrl);
+                    router.refresh();
+                    return;
+                }
+                toast.error('Invalid credentials');
+                return;
+            }
+
             const result = await signIn('credentials', {
                 username: formData.username,
                 password: formData.password,
@@ -38,13 +52,7 @@ function LoginForm() {
             });
 
             if (result?.error) {
-                if (result.error?.toLowerCase().includes('auth not configured')) {
-                    toast.info('Auth not configured. Opening dashboard without login…');
-                    router.push('/admin/dashboard');
-                    router.refresh();
-                } else {
-                    toast.error('Invalid credentials');
-                }
+                toast.error('Invalid credentials');
             } else {
                 toast.success('Login successful');
                 router.push(callbackUrl);

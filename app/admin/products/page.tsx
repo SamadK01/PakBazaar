@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Pencil, Trash2, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AdminProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
@@ -51,15 +52,19 @@ export default function AdminProductsPage() {
     }, [currentProduct]);
 
     const handleDelete = (id: string) => {
-        if (confirm('Are you sure you want to delete this product?')) {
-            fetch('/api/products', {
-                method: 'DELETE',
-                headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ id }),
-            }).then(() => {
-                setProducts(products.filter((p) => p.id !== id));
-            });
-        }
+        if (!confirm('Are you sure you want to delete this product?')) return;
+        fetch('/api/products', {
+            method: 'DELETE',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ id }),
+        }).then(async (r) => {
+            if (!r.ok) {
+                toast.message('Deleted locally (not persisted)');
+            } else {
+                toast.success('Product deleted');
+            }
+            setProducts(products.filter((p) => p.id !== id));
+        });
     };
 
     const handleEdit = (product: Product) => {
@@ -90,9 +95,15 @@ export default function AdminProductsPage() {
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify(currentProduct),
             }).then(async (r) => {
-                if (!r.ok) return;
-                const updated = await r.json();
-                setProducts(products.map((p) => (p.id === updated.id ? updated : p)));
+                if (r.ok) {
+                    const updated = await r.json();
+                    setProducts(products.map((p) => (p.id === updated.id ? updated : p)));
+                    toast.success('Product updated');
+                } else {
+                    // Local-only fallback
+                    setProducts(products.map((p) => (p.id === currentProduct.id ? (currentProduct as Product) : p)));
+                    toast.message('Updated locally (not persisted)');
+                }
             });
         } else {
             fetch('/api/products', {
@@ -100,9 +111,15 @@ export default function AdminProductsPage() {
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify(currentProduct),
             }).then(async (r) => {
-                if (!r.ok) return;
-                const created = await r.json();
-                setProducts([...products, created]);
+                if (r.ok) {
+                    const created = await r.json();
+                    setProducts([...products, created]);
+                    toast.success('Product added');
+                } else {
+                    // Local-only fallback
+                    setProducts([...products, currentProduct as Product]);
+                    toast.message('Added locally (not persisted)');
+                }
             });
         }
         setIsDialogOpen(false);

@@ -38,7 +38,13 @@ function LoginForm() {
             });
 
             if (result?.error) {
-                toast.error('Invalid credentials');
+                if (result.error?.toLowerCase().includes('auth not configured')) {
+                    toast.info('Auth not configured. Opening dashboard without login…');
+                    router.push('/admin/dashboard');
+                    router.refresh();
+                } else {
+                    toast.error('Invalid credentials');
+                }
             } else {
                 toast.success('Login successful');
                 router.push(callbackUrl);

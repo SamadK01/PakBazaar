@@ -8,15 +8,25 @@ export const runtime = "nodejs";
 const filePath = path.join(process.cwd(), "data", "products.json");
 
 async function readProducts(): Promise<Product[]> {
+  // Prefer static import so it works on Vercel (bundled file)
   try {
-    const data = await fs.readFile(filePath, "utf-8");
-    return JSON.parse(data);
+    const { default: json } = await import("@/data/products.json");
+    return json as Product[];
   } catch {
-    return [];
+    // Fallback to local filesystem for dev
+    try {
+      const data = await fs.readFile(filePath, "utf-8");
+      return JSON.parse(data);
+    } catch {
+      return [];
+    }
   }
 }
 
 async function writeProducts(products: Product[]) {
+  if (process.env.VERCEL) {
+    throw new Error("Read-only environment");
+  }
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(products, null, 2), "utf-8");
 }
@@ -27,6 +37,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (process.env.VERCEL) {
+    return NextResponse.json({ error: "Read-only in production" }, { status: 501 });
+  }
   const { auth } = await import("@/auth");
   const session = await auth();
   if (!session || (session.user as any)?.role !== "admin") {
@@ -40,6 +53,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
+  if (process.env.VERCEL) {
+    return NextResponse.json({ error: "Read-only in production" }, { status: 501 });
+  }
   const { auth } = await import("@/auth");
   const session = await auth();
   if (!session || (session.user as any)?.role !== "admin") {
@@ -57,6 +73,9 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  if (process.env.VERCEL) {
+    return NextResponse.json({ error: "Read-only in production" }, { status: 501 });
+  }
   const { auth } = await import("@/auth");
   const session = await auth();
   if (!session || (session.user as any)?.role !== "admin") {

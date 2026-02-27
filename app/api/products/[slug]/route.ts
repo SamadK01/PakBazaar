@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import type { Product } from "@/lib/data";
@@ -15,14 +15,14 @@ async function readProducts(): Promise<Product[]> {
 }
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { slug: string } }
+  _req: NextRequest,
+  context: { params: Promise<{ slug: string }> }
 ) {
+  const { slug } = await context.params;
   const products = await readProducts();
-  const product = products.find((p) => p.slug === params.slug);
+  const product = products.find((p) => p.slug === slug);
   if (!product) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }
   return NextResponse.json(product);
 }
-

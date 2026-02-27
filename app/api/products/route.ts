@@ -2,86 +2,58 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import type { Product } from "@/lib/data";
-import productsData from "@/data/products.json";
+import { listProducts, createProduct, updateProduct, deleteProduct } from "@/lib/store";
 
 export const runtime = "nodejs";
 
 const filePath = path.join(process.cwd(), "data", "products.json");
 
-async function readProducts(): Promise<Product[]> {
-  // Use bundled JSON for production reliability; fallback to fs in dev
-  if (productsData && Array.isArray(productsData)) {
-    return productsData as Product[];
-  }
-  try {
-    const data = await fs.readFile(filePath, "utf-8");
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
-}
-
-async function writeProducts(products: Product[]) {
-  if (process.env.VERCEL) {
-    throw new Error("Read-only environment");
-  }
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-  await fs.writeFile(filePath, JSON.stringify(products, null, 2), "utf-8");
-}
-
 export async function GET() {
-  const products = await readProducts();
+  const products = await listProducts();
   return NextResponse.json(products);
 }
 
 export async function POST(req: NextRequest) {
-  if (process.env.VERCEL) {
-    return NextResponse.json({ error: "Read-only in production" }, { status: 501 });
-  }
-  const { auth } = await import("@/auth");
-  const session = await auth();
-  if (!session || (session.user as any)?.role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const { auth } = await import("@/auth");
+    const session = await auth();
+    if (!session || (session.user as any)?.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-  const body = await req.json();
-  const products = await readProducts();
-  products.push(body as Product);
-  await writeProducts(products);
-  return NextResponse.json(body, { status: 201 });
+    const body = (await req.json()) as Product;
+    const created = await createProduct(body);
+    return NextResponse.json(created, { status: 201 });
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || "Read-only in production" }, { status: 501 });
+  }
 }
 
 export async function PUT(req: NextRequest) {
-  if (process.env.VERCEL) {
-    return NextResponse.json({ error: "Read-only in production" }, { status: 501 });
+  try {
+    const { auth } = await import("@/auth");
+    const session = await auth();
+    if (!session || (session.user as any)?.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const updated = (await req.json()) as Product;
+    const saved = await updateProduct(updated);
+    return NextResponse.json(saved);
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || "Read-only in production" }, { status: 501 });
   }
-  const { auth } = await import("@/auth");
-  const session = await auth();
-  if (!session || (session.user as any)?.role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const updated = (await req.json()) as Product;
-  const products = await readProducts();
-  const idx = products.findIndex((p) => p.id === updated.id);
-  if (idx === -1) {
-    return NextResponse.json({ error: "Not Found" }, { status: 404 });
-  }
-  products[idx] = updated;
-  await writeProducts(products);
-  return NextResponse.json(updated);
 }
 
 export async function DELETE(req: NextRequest) {
-  if (process.env.VERCEL) {
-    return NextResponse.json({ error: "Read-only in production" }, { status: 501 });
+  try {
+    const { auth } = await import("@/auth");
+    const session = await auth();
+    if (!session || (session.user as any)?.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const { id } = await req.json();
+    await deleteProduct(String(id));
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message || "Read-only in production" }, { status: 501 });
   }
-  const { auth } = await import("@/auth");
-  const session = await auth();
-  if (!session || (session.user as any)?.role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const { id } = await req.json();
-  const products = await readProducts();
-  const filtered = products.filter((p) => p.id !== id);
-  await writeProducts(filtered);
-  return NextResponse.json({ ok: true });
 }

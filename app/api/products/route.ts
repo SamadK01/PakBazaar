@@ -2,24 +2,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import type { Product } from "@/lib/data";
+import productsData from "@/data/products.json";
 
 export const runtime = "nodejs";
 
 const filePath = path.join(process.cwd(), "data", "products.json");
 
 async function readProducts(): Promise<Product[]> {
-  // Prefer static import so it works on Vercel (bundled file)
+  // Use bundled JSON for production reliability; fallback to fs in dev
+  if (productsData && Array.isArray(productsData)) {
+    return productsData as Product[];
+  }
   try {
-    const { default: json } = await import("@/data/products.json");
-    return json as Product[];
+    const data = await fs.readFile(filePath, "utf-8");
+    return JSON.parse(data);
   } catch {
-    // Fallback to local filesystem for dev
-    try {
-      const data = await fs.readFile(filePath, "utf-8");
-      return JSON.parse(data);
-    } catch {
-      return [];
-    }
+    return [];
   }
 }
 

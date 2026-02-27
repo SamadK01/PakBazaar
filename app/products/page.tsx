@@ -1,5 +1,6 @@
 import ProductsBrowser from '@/components/ProductsBrowser';
 import type { Product } from '@/lib/data';
+import productsData from '@/data/products.json';
 import { Suspense } from 'react';
 
 interface ProductsPageProps {
@@ -10,15 +11,7 @@ interface ProductsPageProps {
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-    let products: Product[] = [];
-    try {
-        const res = await fetch(`/api/products`, { cache: 'no-store' });
-        if (res.ok) {
-            products = await res.json();
-        }
-    } catch {
-        products = [];
-    }
+    const products = (productsData as Product[]) ?? [];
 
     return (
         <div className="container mx-auto px-4 py-8">

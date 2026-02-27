@@ -2,18 +2,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/ProductCard";
 import type { Product } from "@/lib/data";
+import productsData from "@/data/products.json";
 import { ArrowRight, ShoppingBag, Truck, ShieldCheck, Clock } from "lucide-react";
 
 export default async function Home() {
-  let products: Product[] = [];
-  try {
-    const res = await fetch(`/api/products`, { cache: 'no-store' });
-    if (res.ok) {
-      products = await res.json();
-    }
-  } catch {
-    products = [];
-  }
+  const products = (productsData as Product[]) ?? [];
   const featuredProducts = products.filter((product) => product.featured);
   const categories = Array.from(new Set(products.map((p) => p.category))).slice(0, 6);
 

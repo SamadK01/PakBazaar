@@ -11,16 +11,18 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useSession, signOut, signIn } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User } from 'lucide-react';
 
 export function UserNav() {
     const { data: session } = useSession();
+    const router = useRouter();
 
     if (!session) {
         return (
-            <Button variant="ghost" size="sm" onClick={() => signIn('google')}>
+            <Button variant="ghost" size="sm" onClick={() => router.push('/admin/login')}>
                 Login
             </Button>
         );

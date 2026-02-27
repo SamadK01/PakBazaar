@@ -6,7 +6,6 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
   const { auth } = await import("@/auth");
-  // @ts-expect-error calling NextAuth proxy handler
   return auth(req);
 }
 

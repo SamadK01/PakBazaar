@@ -5,8 +5,15 @@ import type { Product } from "@/lib/data";
 import { ArrowRight, ShoppingBag, Truck, ShieldCheck, Clock } from "lucide-react";
 
 export default async function Home() {
-  const res = await fetch(`${process.env.AUTH_URL || ''}/api/products`, { cache: 'no-store' });
-  const products: Product[] = await res.json();
+  let products: Product[] = [];
+  try {
+    const res = await fetch(`/api/products`, { cache: 'no-store' });
+    if (res.ok) {
+      products = await res.json();
+    }
+  } catch {
+    products = [];
+  }
   const featuredProducts = products.filter((product) => product.featured);
   const categories = Array.from(new Set(products.map((p) => p.category))).slice(0, 6);
 
